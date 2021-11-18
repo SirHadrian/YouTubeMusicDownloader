@@ -6,11 +6,8 @@
 # ==========================
 
 
+import argparse
 import youtube_dl
-
-
-TEST_LINK = 'https://www.youtube.com/watch?v=2YTBgFmK_bs'
-TEST_LINK_MIX = 'https://www.youtube.com/watch?v=2YTBgFmK_bs&list=RD2YTBgFmK_bs&start_radio=1&rv=2YTBgFmK_bs&t=0'
 
 
 # !!! Change the user !!!
@@ -91,8 +88,30 @@ def downloadFromFile(fileName: str) -> None:
 
 
 def main():
-    pass
+    # Parser object to process the command line options.
+    parser = argparse.ArgumentParser(description="YouTube Music Downloader",
+                                    help='Download YouTube contents as mp3 for the given links or txt file')
+
+    # Download options for the program, can choose only one.
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-l', '--links', action='store', nargs='+',
+                       type=str, required=False, dest='links',
+                       help='The links for the videos to be downloaded')
+    group.add_argument('-f', '--file', action='store', nargs=1,
+                       type=str, required=False, dest='file',
+                       help='File with the links for the videos to be downloaded')
+
+    # Converting Namespace to dict
+    args = vars(parser.parse_args())
+
+    if args['links'] != None:
+        print('STARTED DOWNLOADING FROM THE LINKS')
+        downloadFromLinks(args['links'])
+
+    elif args['file'] != None:
+        print('STARTED DOWNLOADING FORM THE FILE')
+        downloadFromFile(args['file'])
 
 
 if __name__ == "__main__":
-    downloadFromLinks(TEST_LINK_MIX)
+    main()
