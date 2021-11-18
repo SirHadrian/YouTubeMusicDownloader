@@ -6,7 +6,7 @@
 # ==========================
 
 
-import argparse
+from argparse import ArgumentParser
 import youtube_dl
 
 
@@ -89,12 +89,12 @@ def downloadFromFile(fileName: str) -> None:
 
 def main():
     # Parser object to process the command line options.
-    parser = argparse.ArgumentParser(description="YouTube Music Downloader",
-                                    help='Download YouTube contents as mp3 for the given links or txt file')
+    parser = ArgumentParser(description="YouTube Music Downloader",
+                            add_help='Download YouTube contents as mp3 for the given links or txt file')
 
     # Download options for the program, can choose only one.
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-l', '--links', action='store', nargs='+',
+    group.add_argument('-l', '--links', action='store', nargs='+', metavar='LINK(s)',
                        type=str, required=False, dest='links',
                        help='The links for the videos to be downloaded')
     group.add_argument('-f', '--file', action='store', nargs=1,
@@ -105,11 +105,11 @@ def main():
     args = vars(parser.parse_args())
 
     if args['links'] != None:
-        print('STARTED DOWNLOADING FROM THE LINKS')
+        print('---STARTED DOWNLOADING FROM THE LINK(s)---')
         downloadFromLinks(args['links'])
 
     elif args['file'] != None:
-        print('STARTED DOWNLOADING FORM THE FILE')
+        print('---STARTED DOWNLOADING FORM THE FILE---')
         downloadFromFile(args['file'])
 
 
