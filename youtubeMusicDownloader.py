@@ -20,7 +20,7 @@ USER = 'sirhadrian'
 SAVE_PATH = f'/home/{USER}/Music/YouTubeDownloader'
 
 # FFmpeg params.
-params = {
+PARAMS = {
     'format': 'bestaudio/best',
     'postprocessors': [{
         'key': 'FFmpegExtractAudio',
@@ -31,7 +31,7 @@ params = {
 }
 
 
-def refactorLinks(links: list)-> list:
+def refactorLinks(links: list) -> list:
     """If the videos are in a playlist or YouTube Mix they need to be refactored so
     that they are pointing to their respective video.
 
@@ -45,8 +45,8 @@ def refactorLinks(links: list)-> list:
     refactored_links = []
 
     for link in links:
-        # If a link contains an '&' it meens that it is in a playlist and needs to 
-        # be refactored. 
+        # If a link contains an '&' it meens that it is in a playlist and needs to
+        # be refactored.
         index = link.find('&')
 
         if index != -1:
@@ -59,20 +59,35 @@ def refactorLinks(links: list)-> list:
 
 def downloadFromLinks(links: list) -> None:
     """Downloads multiple youtube videos and converts them to mp3 using ffmpeg 
-    according with the FFmpeg params.
+    according with the FFmpeg params. Also refactors the given links.
 
     Args:
         links (lsit): Link(s) to one or multiple youtube videos.
     """
 
     # Videos download and convert with specific params.
-    with youtube_dl.YoutubeDL(params=params) as downloader:
+    with youtube_dl.YoutubeDL(params=PARAMS) as downloader:
         # Parameter must be a list.
         downloader.download(refactorLinks(links))
 
 
-def downloadFromFile(fileName: str)->None:
-    pass
+def downloadFromFile(fileName: str) -> None:
+    """Downloads and converts all the links from the given file, every link must be saved 
+    on a new line in the file.
+
+    Args:
+        fileName (str): The file handler.
+    """
+
+    # Geting all the raw links from the file.
+    with open(fileName, 'r') as file:
+        links = file.readlines()
+
+    # Stripping all the unwanted '\n' from the links.
+    links = [link.strip('\n') for link in links]
+
+    # Links are refactored inside the function.
+    downloadFromLinks(links)
 
 
 def main():
