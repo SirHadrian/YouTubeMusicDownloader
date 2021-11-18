@@ -1,17 +1,23 @@
 #!./.ve/bin/python3
 
 
+# ==========================
+# YouTube Music Downloader
+# ==========================
+
+
 import youtube_dl
+
 
 TEST_LINK = 'https://www.youtube.com/watch?v=2YTBgFmK_bs'
 TEST_LINK_MIX = 'https://www.youtube.com/watch?v=2YTBgFmK_bs&list=RD2YTBgFmK_bs&start_radio=1&rv=2YTBgFmK_bs&t=0'
 
 
-# Change the user
+# Change the user.
 USER = 'sirhadrian'
-# Change save path if not using Linux
+# Change save path if not using Linux.
 SAVE_PATH = f'/home/{USER}/Music/YouTubeDownloader'
-# FFmpeg params
+# FFmpeg params.
 params = {
     'format': 'bestaudio/best',
     'postprocessors': [{
@@ -23,24 +29,31 @@ params = {
 }
 
 
-def downloadFromLink(link: str) -> None:
-    """Downloads a single youtube video and converts it using ffmpeg according with the FFmpeg params
+def downloadFromLinks(links: list) -> None:
+    """Downloads multiple youtube videos and converts them to mp3 using ffmpeg 
+    according with the FFmpeg params.
 
     Args:
-        link (str): Link to the a single video
+        links (lsit): Link(s) to one or multiple youtube videos.
     """
 
-    # If the video is in a playlist or YouTube Mix the link needs to be refactored
-    # so that it's pointing to the individual video
-    index = link.find('&')
-    
-    if index != -1:
-        link = link[:index]
-    
-    # Video downloading and converting
+    # If the videos are in a playlist or YouTube Mix they need to be refactored so
+    # that they are pointing to their respective video.
+    refactored_links = []
+
+    for link in links:
+        # If a link contains an '&' it meens that it is in a playlist and needs to 
+        # be refactored. 
+        index = link.find('&')
+        if index != -1:
+            refactored_links.append(link[:index])
+        else:
+            refactored_links.append(link)
+
+    # Videos download and convert with specific params.
     with youtube_dl.YoutubeDL(params=params) as downloader:
-        # Parameter must be a list
-        downloader.download([link])
+        # Parameter must be a list.
+        downloader.download(refactored_links)
 
 
 def main():
@@ -48,4 +61,4 @@ def main():
 
 
 if __name__ == "__main__":
-    downloadFromLink(TEST_LINK_MIX)
+    downloadFromLinks(TEST_LINK_MIX)
