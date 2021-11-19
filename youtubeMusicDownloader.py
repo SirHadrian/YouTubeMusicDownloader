@@ -97,7 +97,7 @@ def main():
     group.add_argument('-l', '--links', action='store', nargs='+', metavar='LINK(s)',
                        type=str, required=False, dest='links',
                        help='The links for the videos to be downloaded')
-    group.add_argument('-f', '--file', action='store', nargs=1,
+    group.add_argument('-f', '--file', action='store',
                        type=str, required=False, dest='file',
                        help='File with the links for the videos to be downloaded')
 
