@@ -16,16 +16,6 @@ USER = 'sirhadrian'
 # Change save path if not using Linux.
 SAVE_PATH = f'/home/{USER}/Music/YouTubeDownloader'
 
-# FFmpeg params.
-PARAMS = {
-    'format': 'bestaudio/best',
-    'postprocessors': [{
-        'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'mp3',
-        'preferredquality': '192'
-    }],
-    'outtmpl': SAVE_PATH + '/%(title)s.%(ext)s'
-}
 
 
 def refactorLinks(links: list) -> list:
@@ -54,7 +44,7 @@ def refactorLinks(links: list) -> list:
     return refactored_links
 
 
-def downloadFromLinks(links: list) -> None:
+def downloadFromLinks(links: list, PARAMS: dict) -> None:
     """Downloads multiple youtube videos and converts them to mp3 using ffmpeg 
     according with the FFmpeg params. Also refactors the given links.
 
@@ -68,7 +58,7 @@ def downloadFromLinks(links: list) -> None:
         downloader.download(refactorLinks(links))
 
 
-def downloadFromFile(fileName: str) -> None:
+def downloadFromFile(fileName: str, PARAMS: dict) -> None:
     """Downloads and converts all the links from the given file, every link must be saved 
     on a new line in the file.
 
@@ -84,7 +74,7 @@ def downloadFromFile(fileName: str) -> None:
     links = [link.strip('\n') for link in links]
 
     # Links are refactored inside the function.
-    downloadFromLinks(links)
+    downloadFromLinks(links, PARAMS)
 
 
 def main():
@@ -108,18 +98,28 @@ def main():
     # Converting Namespace to dict
     args = vars(parser.parse_args())
 
-
     if args['dir'] != None:
         global SAVE_PATH
         SAVE_PATH = SAVE_PATH + '/' + args['dir']
 
+    # FFmpeg params.
+    PARAMS = {
+        'format': 'bestaudio/best',
+        'postprocessors': [{
+            'key': 'FFmpegExtractAudio',
+            'preferredcodec': 'mp3',
+            'preferredquality': '192'
+        }],
+        'outtmpl': SAVE_PATH + '/%(title)s.%(ext)s'
+    }
+
     if args['links'] != None:
         print('---STARTED DOWNLOADING FROM THE LINK(s)---')
-        downloadFromLinks(args['links'])
+        downloadFromLinks(args['links'], PARAMS)
 
     elif args['file'] != None:
         print('---STARTED DOWNLOADING FORM THE FILE---')
-        downloadFromFile(args['file'])
+        downloadFromFile(args['file'], PARAMS)
 
 
 if __name__ == "__main__":
