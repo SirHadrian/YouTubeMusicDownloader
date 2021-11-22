@@ -92,6 +92,10 @@ def main():
     parser = ArgumentParser(description="YouTube Music Downloader",
                             add_help='Download YouTube contents as mp3 for the given links or txt file')
 
+    # Subfolder option
+    parser.add_argument('-d', '--dir', action='store', type=str, required=False, dest='dir',
+                        nargs='?', help='Create a subdirectory for the files')
+
     # Download options for the program, can choose only one.
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-l', '--links', action='store', nargs='+', metavar='LINK(s)',
@@ -103,6 +107,11 @@ def main():
 
     # Converting Namespace to dict
     args = vars(parser.parse_args())
+
+
+    if args['dir'] != None:
+        global SAVE_PATH
+        SAVE_PATH = SAVE_PATH + '/' + args['dir']
 
     if args['links'] != None:
         print('---STARTED DOWNLOADING FROM THE LINK(s)---')
