@@ -1,16 +1,13 @@
 #!venv/bin/python3
 
-
 # ==========================
 # YouTube Music Downloader #
 # ==========================
 
-
+import youtube_dl
 import time
 from argparse import ArgumentParser
 from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
-
-import youtube_dl
 
 start = time.perf_counter()
 
@@ -35,8 +32,7 @@ def refactor_links(links: list) -> list:
     refactored_links = []
 
     for link in links:
-        # If a link contains an '&' it means that it is in a playlist and needs to
-        # be refactored.
+        # If a link contains an '&' it means that it is in a playlist and needs to be refactored.
         index = link.find('&')
 
         if index != -1:
@@ -68,6 +64,9 @@ def download_from_file(file_name: str) -> list:
 
     Args:
         file_name (str): The file handler.
+
+    Returns:
+        list: Refactored links
     """
 
     # Getting all the raw links from the file.
@@ -81,6 +80,16 @@ def download_from_file(file_name: str) -> list:
 
 
 def start_thread_workers(links: list, params: dict, worker_threads: int) -> None:
+    """
+
+    Args:
+        links: Workload for the worker threads
+        params: FFmpeg config
+        worker_threads: number of threads to start
+
+    Returns:
+
+    """
     thread_pool = ThreadPoolExecutor(worker_threads)
     futures = []
     for link in links:
@@ -98,7 +107,7 @@ def main():
                         nargs='?', help='Create a subdirectory for the files')
     # Worker Threads option
     parser.add_argument('-n', '--thr', action='store', type=int, required=False, dest='thr',
-                        nargs='?', help='The number of worker threads, default 4', default=4)
+                        nargs='?', help='The number of worker threads(1-16), default 4', default=4)
 
     # Download options for the program, can choose only one.
     group = parser.add_mutually_exclusive_group(required=True)
