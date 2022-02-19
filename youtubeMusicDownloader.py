@@ -1,14 +1,18 @@
-#!./.ve/bin/python3
+#!venv/bin/python3
 
 
 # ==========================
-# YouTube Music Downloader
+# YouTube Music Downloader #
 # ==========================
 
 
+import time
 from argparse import ArgumentParser
+from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
+
 import youtube_dl
 
+start = time.perf_counter()
 
 # !!! Change the user !!!
 USER = 'sirhadrian'
@@ -17,8 +21,7 @@ USER = 'sirhadrian'
 SAVE_PATH = f'/home/{USER}/Music/YouTubeDownloader'
 
 
-
-def refactorLinks(links: list) -> list:
+def refactor_links(links: list) -> list:
     """If the videos are in a playlist or YouTube Mix they need to be refactored so
     that they are pointing to their respective video.
 
@@ -32,7 +35,7 @@ def refactorLinks(links: list) -> list:
     refactored_links = []
 
     for link in links:
-        # If a link contains an '&' it meens that it is in a playlist and needs to
+        # If a link contains an '&' it means that it is in a playlist and needs to
         # be refactored.
         index = link.find('&')
 
@@ -44,47 +47,58 @@ def refactorLinks(links: list) -> list:
     return refactored_links
 
 
-def downloadFromLinks(links: list, PARAMS: dict) -> None:
-    """Downloads multiple youtube videos and converts them to mp3 using ffmpeg 
-    according with the FFmpeg params. Also refactors the given links.
+def download_from_link(link: str, params: dict) -> None:
+    """Downloads multiple YouTube videos and converts them to mp3 using ffmpeg
+    according to the FFmpeg params. Also refactors the given links.
 
     Args:
-        links (lsit): Link(s) to one or multiple youtube videos.
+        params: YouTubeDl configs
+        link (list): Link(s) to one or multiple YouTube videos.
     """
 
     # Videos download and convert with specific params.
-    with youtube_dl.YoutubeDL(params=PARAMS) as downloader:
+    with youtube_dl.YoutubeDL(params=params) as downloader:
         # Parameter must be a list.
-        downloader.download(refactorLinks(links))
+        downloader.download((link,))
 
 
-def downloadFromFile(fileName: str, PARAMS: dict) -> None:
+def download_from_file(file_name: str) -> list:
     """Downloads and converts all the links from the given file, every link must be saved 
     on a new line in the file.
 
     Args:
-        fileName (str): The file handler.
+        file_name (str): The file handler.
     """
 
-    # Geting all the raw links from the file.
-    with open(fileName, 'r') as file:
+    # Getting all the raw links from the file.
+    with open(file_name, 'r') as file:
         links = file.readlines()
 
     # Stripping all the unwanted '\n' from the links.
     links = [link.strip('\n') for link in links]
 
-    # Links are refactored inside the function.
-    downloadFromLinks(links, PARAMS)
+    return refactor_links(links)
+
+
+def start_thread_workers(links: list, params: dict, worker_threads: int) -> None:
+    thread_pool = ThreadPoolExecutor(worker_threads)
+    futures = []
+    for link in links:
+        futures.append(thread_pool.submit(download_from_link, link, params))
+    wait(futures, return_when=ALL_COMPLETED)
 
 
 def main():
     # Parser object to process the command line options.
-    parser = ArgumentParser(description="YouTube Music Downloader",
-                            add_help='Download YouTube contents as mp3 for the given links or txt file')
+    parser = ArgumentParser(description='YouTube Music Downloader, Download YouTube contents as mp3 for the '
+                                        'given links or txt file')
 
-    # Subfolder option
+    # Sub-folder option
     parser.add_argument('-d', '--dir', action='store', type=str, required=False, dest='dir',
                         nargs='?', help='Create a subdirectory for the files')
+    # Worker Threads option
+    parser.add_argument('-n', '--thr', action='store', type=int, required=False, dest='thr',
+                        nargs='?', help='The number of worker threads, default 4', default=4)
 
     # Download options for the program, can choose only one.
     group = parser.add_mutually_exclusive_group(required=True)
@@ -98,9 +112,13 @@ def main():
     # Converting Namespace to dict
     args = vars(parser.parse_args())
 
-    if args['dir'] != None:
+    if args['dir'] is not None:
         global SAVE_PATH
         SAVE_PATH = SAVE_PATH + '/' + args['dir']
+
+    worker_threads = args['thr']
+    if 1 > worker_threads >= 16:
+        worker_threads = 4
 
     # FFmpeg params.
     PARAMS = {
@@ -113,14 +131,18 @@ def main():
         'outtmpl': SAVE_PATH + '/%(title)s.%(ext)s'
     }
 
-    if args['links'] != None:
+    if args['links'] is not None:
         print('---STARTED DOWNLOADING FROM THE LINK(s)---')
-        downloadFromLinks(args['links'], PARAMS)
+        links = refactor_links(args['links'])
+        start_thread_workers(links, PARAMS, worker_threads)
 
-    elif args['file'] != None:
+    elif args['file'] is not None:
         print('---STARTED DOWNLOADING FORM THE FILE---')
-        downloadFromFile(args['file'], PARAMS)
+        links = download_from_file(args['file'])
+        start_thread_workers(links, PARAMS, worker_threads)
 
 
 if __name__ == "__main__":
     main()
+    finish = time.perf_counter()
+    print(f'Finished in {round(finish - start, 2)} second(s)')
