@@ -4,10 +4,11 @@
 # YouTube Music Downloader #
 # ==========================
 
-import youtube_dl
 import time
 from argparse import ArgumentParser
-from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
+from concurrent.futures import wait, ALL_COMPLETED, ThreadPoolExecutor
+
+import youtube_dl
 
 start = time.perf_counter()
 
@@ -90,11 +91,11 @@ def start_thread_workers(links: list, params: dict, worker_threads: int) -> None
     Returns:
 
     """
-    thread_pool = ThreadPoolExecutor(worker_threads)
-    futures = []
-    for link in links:
-        futures.append(thread_pool.submit(download_from_link, link, params))
-    wait(futures, return_when=ALL_COMPLETED)
+    with ThreadPoolExecutor(worker_threads) as executor:
+        futures = []
+        for link in links:
+            futures.append(executor.submit(download_from_link, link, params))
+        wait(futures, return_when=ALL_COMPLETED)
 
 
 def main():
