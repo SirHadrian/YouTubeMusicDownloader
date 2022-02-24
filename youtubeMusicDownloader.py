@@ -4,13 +4,21 @@
 # YouTube Music Downloader #
 # ==========================
 
-import time
+from time import perf_counter
 from argparse import ArgumentParser
 from concurrent.futures import wait, ALL_COMPLETED, ThreadPoolExecutor
 
 import youtube_dl
 
-start = time.perf_counter()
+
+def start(t0):
+    def calc(t1):
+        return t1-t0
+    return calc
+
+# Func to return script run time
+stop = start(perf_counter())
+
 
 # !!! Change the user !!!
 USER = 'sirhadrian'
@@ -30,31 +38,28 @@ def refactor_links(links: list) -> list:
         list: Refactored links
     """
 
-    refactored_links = []
-
-    for link in links:
+    def refactor_link(link: str) -> str:
         # If a link contains an '&' it means that it is in a playlist and needs to be refactored.
         index = link.find('&')
 
-        if index != -1:
-            refactored_links.append(link[:index])
-        else:
-            refactored_links.append(link)
+        return link[:index] if index != -1 else link
 
-    return refactored_links
+    refactored_links = map(refactor_link, links)
+
+    return list(refactored_links)
 
 
-def download_from_link(link: str, params: dict) -> None:
+def download_from_link(link: str, PARAMS: dict) -> None:
     """Downloads multiple YouTube videos and converts them to mp3 using ffmpeg
     according to the FFmpeg params. Also refactors the given links.
 
     Args:
-        params: YouTubeDl configs
+        PARAMS: YouTubeDl configs; const
         link (list): Link(s) to one or multiple YouTube videos.
     """
 
     # Videos download and convert with specific params.
-    with youtube_dl.YoutubeDL(params=params) as downloader:
+    with youtube_dl.YoutubeDL(params=PARAMS) as downloader:
         # Parameter must be a list.
         downloader.download((link,))
 
@@ -80,21 +85,23 @@ def download_from_file(file_name: str) -> list:
     return refactor_links(links)
 
 
-def start_thread_workers(links: list, params: dict, worker_threads: int) -> None:
+def start_thread_workers(links: list, PARAMS: dict, worker_threads: int) -> None:
     """
 
     Args:
         links: Workload for the worker threads
-        params: FFmpeg config
+        PARAMS: FFmpeg config; const
         worker_threads: number of threads to start
-
-    Returns:
-
     """
     with ThreadPoolExecutor(worker_threads) as executor:
-        futures = []
-        for link in links:
-            futures.append(executor.submit(download_from_link, link, params))
+        def thread_config(target, PARAMS):
+            def submit(link):
+                return executor.submit(target, link, PARAMS)
+            return submit
+
+        future_factory = thread_config(download_from_link, PARAMS)
+        futures = map(future_factory, links)
+
         wait(futures, return_when=ALL_COMPLETED)
 
 
@@ -107,7 +114,7 @@ def main():
     parser.add_argument('-d', '--dir', action='store', type=str, required=False, dest='dir',
                         nargs='?', help='Create a subdirectory for the files')
     # Worker Threads option
-    parser.add_argument('-n', '--thr', action='store', type=int, required=False, dest='thr',
+    parser.add_argument('-t', '--thr', action='store', type=int, required=False, dest='thr',
                         nargs='?', help='The number of worker threads(1-16), default 4', default=4)
 
     # Download options for the program, can choose only one.
@@ -128,7 +135,7 @@ def main():
 
     worker_threads = args['thr']
     if 1 > worker_threads >= 16:
-        worker_threads = 4
+        worker_threads = 8
 
     # FFmpeg params.
     PARAMS = {
@@ -154,5 +161,5 @@ def main():
 
 if __name__ == "__main__":
     main()
-    finish = time.perf_counter()
-    print(f'Finished in {round(finish - start, 2)} second(s)')
+    finish = stop(perf_counter())
+    print(f'Finished in {round(finish, 2)} second(s)')
