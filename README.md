@@ -1,6 +1,6 @@
 # YouTubeMusicDownloader
 
-## Dependecyes
+## Dependencies
 youtube-dl
 ffmpeg
 
