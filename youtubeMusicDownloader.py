@@ -6,13 +6,14 @@ from time import perf_counter
 from argparse import ArgumentParser
 from concurrent.futures import wait, ALL_COMPLETED, ThreadPoolExecutor
 
-import youtube_dl
+import yt_dlp
 
 
 def start(t0):
     def calc(t1):
         return t1-t0
     return calc
+
 
 # Func to return script run time
 stop = start(perf_counter())
@@ -26,8 +27,8 @@ SAVE_PATH = f'/home/{USER}/Music/YouTubeDownloader'
 
 
 def refactor_links(links: list) -> list:
-    """If the videos are in a playlist or YouTube Mix they need to be refactored so
-    that they are pointing to their respective video.
+    """If the videos are in a playlist or YouTube Mix they need to be
+    refactored so that they are pointing to their respective video.
 
     Args:
         links (list): 'Raw' links
@@ -37,7 +38,9 @@ def refactor_links(links: list) -> list:
     """
 
     def refactor_link(link: str) -> str:
-        # If a link contains an '&' it means that it is in a playlist and needs to be refactored.
+        """ If a link contains an '&' it means that it is in a playlist and
+        needs to be refactored.
+        """
         index = link.find('&')
 
         return link[:index] if index != -1 else link
@@ -57,14 +60,14 @@ def download_from_link(link: str, PARAMS: dict) -> None:
     """
 
     # Videos download and convert with specific params.
-    with youtube_dl.YoutubeDL(params=PARAMS) as downloader:
+    with yt_dlp.YoutubeDL(params=PARAMS) as downloader:
         # Parameter must be a list.
         downloader.download((link,))
 
 
 def download_from_file(file_name: str) -> list:
-    """Downloads and converts all the links from the given file, every link must be saved 
-    on a new line in the file.
+    """Downloads and converts all the links from the given file, every link
+    must be saved on a new line in the file.
 
     Args:
         file_name (str): The file handler.
@@ -83,7 +86,11 @@ def download_from_file(file_name: str) -> list:
     return refactor_links(links)
 
 
-def start_thread_workers(links: list, PARAMS: dict, worker_threads: int) -> None:
+def start_thread_workers(
+        links: list,
+        PARAMS: dict,
+        worker_threads: int
+) -> None:
     """
 
     Args:
@@ -105,24 +112,35 @@ def start_thread_workers(links: list, PARAMS: dict, worker_threads: int) -> None
 
 def main():
     # Parser object to process the command line options.
-    parser = ArgumentParser(description='YouTube Music Downloader, Download YouTube contents as mp3 for the '
-                                        'given links or txt file')
+    parser = ArgumentParser(
+        description='YouTube Music Downloader, Download YouTube contents as \
+                mp3 for the given links or txt file'
+    )
 
     # Sub-folder option
-    parser.add_argument('-d', '--dir', action='store', type=str, required=False, dest='dir',
-                        nargs='?', help='Create a subdirectory for the files')
+    parser.add_argument(
+        '-d', '--dir', action='store', type=str, required=False, dest='dir',
+        nargs='?', help='Create a subdirectory for the files'
+    )
     # Worker Threads option
-    parser.add_argument('-t', '--thr', action='store', type=int, required=False, dest='thr',
-                        nargs='?', help='The number of worker threads(1-16), default 4', default=4)
+    parser.add_argument(
+        '-t', '--thr', action='store', type=int, required=False, dest='thr',
+        nargs='?', help='The number of worker threads(1-16), default 4',
+        default=4
+    )
 
     # Download options for the program, can choose only one.
     group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument('-l', '--links', action='store', nargs='+', metavar='LINK(s)',
-                       type=str, required=False, dest='links',
-                       help='The links for the videos to be downloaded')
-    group.add_argument('-f', '--file', action='store',
-                       type=str, required=False, dest='file',
-                       help='File with the links for the videos to be downloaded')
+    group.add_argument(
+        '-l', '--links', action='store', nargs='+', metavar='LINK(s)',
+        type=str, required=False, dest='links',
+        help='The links for the videos to be downloaded'
+    )
+    group.add_argument(
+        '-f', '--file', action='store',
+        type=str, required=False, dest='file',
+        help='File with the links for the videos to be downloaded'
+    )
 
     # Converting Namespace to dict
     args = vars(parser.parse_args())
