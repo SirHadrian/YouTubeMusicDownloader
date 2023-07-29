@@ -153,7 +153,7 @@ def main():
     if 1 > worker_threads >= 16:
         worker_threads = 8
 
-    # FFmpeg params.
+    # YouTubeDl params.
     PARAMS = {
         'format': 'bestaudio/best',
         'postprocessors': [{
@@ -161,7 +161,8 @@ def main():
             'preferredcodec': 'mp3',
             'preferredquality': '192'
         }],
-        'outtmpl': SAVE_PATH + '/%(title)s.%(ext)s'
+        'outtmpl': SAVE_PATH + '/%(title)s.%(ext)s',
+        'default_search': 'ytsearch'
     }
 
     if args['links'] is not None:
