@@ -5,7 +5,7 @@
 from time import perf_counter
 from argparse import ArgumentParser
 
-from downloader import Downloader, start
+from downloader import start, read_file, start_thread_workers
 
 
 def main():
@@ -16,10 +16,10 @@ def main():
     )
 
     # Sub-folder option
-    parser.add_argument(
-        '-d', '--dir', action='store', type=str, required=False, dest='dir',
-        nargs='?', help='Create a subdirectory for the files'
-    )
+    # parser.add_argument(
+    #     '-d', '--dir', action='store', type=str, required=False, dest='dir',
+    #     nargs='?', help='Create a subdirectory for the files'
+    # )
     # Worker Threads option
     parser.add_argument(
         '-t', '--thr', action='store', type=int, required=False, dest='thr',
@@ -43,12 +43,9 @@ def main():
     # Converting Namespace to dict
     args = vars(parser.parse_args())
 
-    save_path = ''
-    if args['dir'] is not None:
-        save_path += '/' + args['dir']
-
-    # Downloader instance
-    downloader = Downloader('sirhadrian', save_path)
+    # save_path = ''
+    # if args['dir'] is not None:
+    #     save_path += '/' + args['dir']
 
     worker_threads = args['thr']
     if 1 > worker_threads >= 16:
@@ -56,12 +53,12 @@ def main():
 
     if args['links'] is not None:
         print('---STARTED DOWNLOADING FROM THE LINK(s)---')
-        downloader.start_thread_workers(args['links'],  worker_threads)
+        start_thread_workers(args['links'],  worker_threads)
 
     elif args['file'] is not None:
         print('---STARTED DOWNLOADING FORM THE FILE---')
-        links = downloader.read_file(args['file'])
-        downloader.start_thread_workers(links,  worker_threads)
+        links = read_file(args['file'])
+        start_thread_workers(links,  worker_threads)
 
 
 if __name__ == "__main__":
