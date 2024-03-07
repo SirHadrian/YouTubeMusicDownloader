@@ -1,6 +1,7 @@
 from concurrent.futures import wait, ALL_COMPLETED, ThreadPoolExecutor
 
 import yt_dlp
+import sys
 
 
 def start(t0):
@@ -9,11 +10,7 @@ def start(t0):
     return calc
 
 
-# !!! Change the user !!!
-_USER = 'sirhadrian'
-
-# Change save path if not using Linux.
-_SAVE_PATH = f'/home/{_USER}/Music/YouTubeDownloader'
+_SAVE_PATH = f'{sys.path[0]}/Music'
 
 # YouTubeDl params.
 _PARAMS = {
